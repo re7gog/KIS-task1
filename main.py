@@ -5,6 +5,7 @@ import re
 import socket
 import argparse
 import base64
+from datetime import datetime
 
 
 username = getpass.getuser()
@@ -30,30 +31,6 @@ def substitute_env_vars(s):
   # Обработка регулярным выражением
   return re.sub(pattern, replace_match, s)
 
-if (args.script):
-    try:
-        with open(args.script) as file:
-            for line in file:
-                line = line.strip()
-                if (line == "exit"):
-                    break
-                elif (line == ""):
-                    continue
-                line = substitute_env_vars(line)
-                if (line == "ls"):
-                    print("ls")
-                elif (line == "cd"):
-                    print("cd")
-                elif (line == "read"):
-                    input()
-                else:
-                    print("Error: unknown command")
-                    break
-    except FileNotFoundError:
-        print(f"Error: File '{args.path}' not found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
 vhs_matrix = []
 def vhs_reader():
     if (args.vhs):
@@ -71,8 +48,13 @@ def vhs_reader():
                     return
                 vhs_matrix.append(header_row)
                 for row in csv_reader:
-                    str64 = base64.b64decode(row[-1])
-                    vhs_matrix.append(str64.decode("utf-8"))
+                    if(row[-1] != '~'):
+                        str64 = base64.b64decode(row[-1])
+                        row12 = row[:-1]
+                        row12.append(str64.decode("utf-8"))
+                        vhs_matrix.append(row12)
+                    else:
+                        vhs_matrix.append(row)
         except FileNotFoundError:
             print(f"Error: File '{args.vhs}' not found.")
         except Exception as e:
@@ -80,16 +62,117 @@ def vhs_reader():
 
 vhs_reader()
 
+curr_dir = ""
+cmd_history = []
+
+if (args.script):
+    try:
+        with open(args.script) as file:
+            for line in file:
+                line = line.strip()
+                line = substitute_env_vars(line)
+                line_spl = line.split()
+                if (line == "exit"):
+                    break
+                elif (line == ""):
+                    continue
+                elif (line == "ls"):
+                    for l in vhs_matrix:
+                        full_path, ftype, data = l
+                        splitted_path = full_path.split("/")
+                        dir = "/".join(splitted_path[:-1])
+                        filename = splitted_path[-1]
+                        if (dir == curr_dir):
+                            print(filename)
+                    cmd_history.append(line)
+                elif (line == "tree"):
+                    sorted_matrix = sorted(vhs_matrix, key=lambda i: str(i[0].count("/")) + i[1] + i[0].split("/")[-1])
+                    for l in sorted_matrix:
+                        full_path, ftype, data = l
+                        splitted_path = full_path.split("/")
+                        dir_tab = "--" * len(splitted_path[:-1])
+                        filename = splitted_path[-1]
+                        if (ftype == "2"):
+                            filename += ":"
+                        print(dir_tab + filename)
+                    cmd_history.append(line)
+                elif (line_spl[0] == "cd"):
+                    move_to = line_spl[1]
+                    if (move_to == ".."):
+                        curr_dir = "/".join(curr_dir.split("/")[:-1])
+                    else:
+                        for l in vhs_matrix:
+                            full_path, ftype, data = l
+                            if (ftype == "2"):
+                                dirname = full_path.split("/")[-1]
+                                if (dirname == move_to):
+                                    curr_dir += "/" + dirname
+                                    break
+                    cmd_history.append(line)
+                elif (line == "history"):
+                    for cmd in cmd_history:
+                        print(cmd)
+                    cmd_history.append(line)
+                elif (line == "date"):
+                    current_datetime = datetime.now()
+                    print(current_datetime)
+                elif (line == "read"):
+                    input()
+                else:
+                    print("Error: unknown command")
+                    break
+    except FileNotFoundError:
+        print(f"Error: File '{args.path}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 while True:
     line = input(username + "@" + hostname + "$")
+    line = substitute_env_vars(line)
+    line_spl = line.split()
     if (line == "exit"):
         break
     elif (line == ""):
         continue
     elif (line == "ls"):
-        print("ls")
-    elif (line == "cd"):
-        print("cd")
+        for l in vhs_matrix:
+            full_path, ftype, data = l
+            splitted_path = full_path.split("/")
+            dir = "/".join(splitted_path[:-1])
+            filename = splitted_path[-1]
+            if (dir == curr_dir):
+                print(filename)
+        cmd_history.append(line)
+    elif (line == "tree"):
+        sorted_matrix = sorted(vhs_matrix, key=lambda i: str(i[0].count("/")) + i[1] + i[0].split("/")[-1])
+        for l in sorted_matrix:
+            full_path, ftype, data = l
+            splitted_path = full_path.split("/")
+            dir_tab = "--" * len(splitted_path[:-1])
+            filename = splitted_path[-1]
+            if (ftype == "2"):
+                filename += ":"
+            print(dir_tab + filename)
+        cmd_history.append(line)
+    elif (line_spl[0] == "cd"):
+        move_to = line_spl[1]
+        if (move_to == ".."):
+            curr_dir = "/".join(curr_dir.split("/")[:-1])
+        else:
+            for l in vhs_matrix:
+                full_path, ftype, data = l
+                if (ftype == "2"):
+                    dirname = full_path.split("/")[-1]
+                    if (dirname == move_to):
+                        curr_dir += "/" + dirname
+                        break
+        cmd_history.append(line)
+    elif (line == "history"):
+        for cmd in cmd_history:
+            print(cmd)
+        cmd_history.append(line)
+    elif (line == "date"):
+        current_datetime = datetime.now()
+        print(current_datetime)
     else:
         print("Error: unknown command")
-        break

@@ -1,4 +1,7 @@
 ls
 read
-cd
+cd home
+cd ..
+tree
+history
 exit

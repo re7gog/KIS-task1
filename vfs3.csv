@@ -1,7 +1,7 @@
-/home,d,
-/home/cool.txt,f,SGlpaWkhKQ==
-/home/bobic.txt,f,YWJvYg==
-/home/bob,d,
-/home/bob/imbob.txt,f,aGksIGknbSBib2I=
-/home/bob/secret_files,d,
-/home/bob/secret_files/boo.txt,f,aGVoZWhlaA==
+/home,2,~
+/home/cool.txt,1,SGlpaWkhKQ==
+/home/bobic.txt,1,YWJvYg==
+/home/bob,2,~
+/home/bob/imbob.txt,1,aGksIGknbSBib2I=
+/home/bob/secret_files,2,~
+/home/bob/secret_files/boo.txt,1,aGVoZWhlaA==
