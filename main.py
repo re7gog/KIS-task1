@@ -7,6 +7,16 @@ import argparse
 import base64
 from datetime import datetime
 
+help_note = """
+exit - exit from shell
+ls - list files in current directory
+tree - print tree of files
+cd [path] - change current directory
+rmdir [dir] - remove directory
+history - history of entered commands
+date - current datetime
+help - this command
+"""
 
 username = getpass.getuser()
 hostname = socket.gethostname()
@@ -167,6 +177,15 @@ while True:
                         curr_dir += "/" + dirname
                         break
         cmd_history.append(line)
+    elif (line_spl[0] == "rmdir"):
+        to_remove = curr_dir + "/" + line_spl[1]
+        new_matrix = []
+        for i in vhs_matrix:
+            full_path, ftype, data = i
+            if(not full_path.startswith(to_remove)):
+                new_matrix.append(i)
+        vhs_matrix = new_matrix
+        cmd_history.append(line)
     elif (line == "history"):
         for cmd in cmd_history:
             print(cmd)
@@ -174,5 +193,7 @@ while True:
     elif (line == "date"):
         current_datetime = datetime.now()
         print(current_datetime)
+    elif (line == "help"):
+        print(help_note)
     else:
         print("Error: unknown command")
