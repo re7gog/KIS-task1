@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "Hiiii)"
-python ./main.py --script="./test-script-err.gsh"
-python ./main.py --vhs="./abob.csv"
+python3 ./main.py --script="./test-script-err.gsh"
+python3 ./main.py --vfs="./abob.csv"
